@@ -3,23 +3,22 @@
 
 module tb_sc_neuron;
 
-  // Set the parameter for the number of inputs
-  // You can change this to 4, 8, 16, etc. without modifying anything else
+  
   parameter N = 4;
 
-  // Vectorized Inputs
+  
   reg clk;
   reg rst_n;
   reg [N-1:0] x;
   reg [N-1:0] w;
   reg b;
   
-  // Output
+  
   wire y;
 
   integer file_in, file_out, scan_file;
   
-  // Instantiate the UUT using explicit port mapping
+
   sc_neuron #(
     .N(N)
   ) uut (
@@ -54,7 +53,7 @@ module tb_sc_neuron;
     begin
       if (!$feof(file_in))
       begin
-        // Reads whole words for x and w based on the width N
+       
         scan_file = $fscanf(file_in, "%b %b %b\n", x, w, b);
         
         #1;
