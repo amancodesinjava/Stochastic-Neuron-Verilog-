@@ -15,7 +15,7 @@ module sc_neuron #(
   wire [N-1:0] out_xw;
   wire [SEL_WIDTH-1:0] sel;
   
-  assign out_xw = x & w;
+  and a1 [N-1:0] (out_xw, x, w);
 
   rand_gen #(
     .SEL_WIDTH(SEL_WIDTH)
