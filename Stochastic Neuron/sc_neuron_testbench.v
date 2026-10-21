@@ -2,11 +2,7 @@
 `timescale 1ns / 1ps
 
 module tb_sc_neuron;
-
-  
   parameter N = 4;
-
-  
   reg clk;
   reg rst_n;
   reg [N-1:0] x;
@@ -15,10 +11,7 @@ module tb_sc_neuron;
   
   
   wire y;
-
-  integer file_in, file_out, scan_file;
-  
-
+integer file_in, file_out, scan_file;
   sc_neuron #(
     .N(N)
   ) uut (
