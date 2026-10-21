@@ -27,23 +27,27 @@ endmodule
 
 module rand_gen_2bit (input clk, rst_n, output wire [1:0] rand_out);
 
-  reg [4:0] lfsr_reg;
-  wire feedback;
-
-  assign feedback = lfsr_reg[4] ^ lfsr_reg[2];
+  reg [15:0] state;
+  wire [15:0] next_state;
+  wire [15:0] t1, t2, t3;
+  
+  assign t1 = state ^ (state << 7);
+  assign t2 = t1 ^ (t1 >> 9);
+  assign t3 = t2 ^ (t2 << 8);
+  
+  assign next_state = t3;
 
   always @(posedge clk or negedge rst_n)
   begin
     if (!rst_n)
     begin
-      lfsr_reg <= 5'h1F;
+      state <= 16'hACE1; 
     end
     else
     begin
-      lfsr_reg <= {lfsr_reg[3:0], feedback};
+      state <= next_state;
     end
   end
-
-  assign rand_out = lfsr_reg[1:0];
+  assign rand_out = {state[15], state[11]};
 
 endmodule
