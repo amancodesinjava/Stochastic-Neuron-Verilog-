@@ -6,11 +6,11 @@ def generate_bit(p_one):
 def generate_bitstream(x_probs, w_probs, b_prob, num_lines, filename="inputs.txt"):
     with open(filename, "w") as f:
         for _ in range(num_lines):
-            x_bits = [str(generate_bit(p)) for p in x_probs]
-            w_bits = [str(generate_bit(p)) for p in w_probs]
-            b_bit = str(generate_bit(b_prob))
+            x_str = "".join(str(generate_bit(p)) for p in x_probs)
+            w_str = "".join(str(generate_bit(p)) for p in w_probs)
+            b_str = str(generate_bit(b_prob))
             
-            f.write(" ".join(x_bits + w_bits + [b_bit]) + "\n")
+            f.write(f"{x_str} {w_str} {b_str}\n")
 
 if __name__ == "__main__":
     n = int(input("Enter n: "))
@@ -20,6 +20,6 @@ if __name__ == "__main__":
     b_prob = float(input("Enter probability for B: "))
     
     TOTAL_LINES = 2_000_000
-    OUTPUT_FILE = "input1.txt"
+    OUTPUT_FILE = "input2.txt"
     
     generate_bitstream(x_probs, w_probs, b_prob, TOTAL_LINES, OUTPUT_FILE)
