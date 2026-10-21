@@ -3,23 +3,33 @@
 
 module tb_sc_neuron;
 
-  // Inputs
+  // Set the parameter for the number of inputs
+  // You can change this to 4, 8, 16, etc. without modifying anything else
+  parameter N = 4;
+
+  // Vectorized Inputs
   reg clk;
   reg rst_n;
-  reg x1, x2, w1, w2, b;
+  reg [N-1:0] x;
+  reg [N-1:0] w;
+  reg b;
+  
+  // Output
   wire y;
 
   integer file_in, file_out, scan_file;
-  sc_neuron uut (
-              clk,
-              rst_n,
-              x1,
-              x2,
-              w1,
-              w2,
-              b,
-              y
-            );
+  
+  // Instantiate the UUT using explicit port mapping
+  sc_neuron #(
+    .N(N)
+  ) uut (
+    .clk(clk),
+    .rst_n(rst_n),
+    .x(x),
+    .w(w),
+    .b(b),
+    .y(y)
+  );
 
   always #5 clk = ~clk;
 
@@ -27,10 +37,8 @@ module tb_sc_neuron;
   begin
     clk = 0;
     rst_n = 0;
-    x1 = 0;
-    x2 = 0;
-    w1 = 0;
-    w2 = 0;
+    x = 0;
+    w = 0;
     b = 0;
 
     file_in = $fopen("inputs.txt", "r");
@@ -46,15 +54,16 @@ module tb_sc_neuron;
     begin
       if (!$feof(file_in))
       begin
-        scan_file = $fscanf(file_in, "%b %b %b %b %b\n", x1, x2, w1, w2, b);
+        // Reads whole words for x and w based on the width N
+        scan_file = $fscanf(file_in, "%b %b %b\n", x, w, b);
+        
         #1;
         $fdisplay(file_out, "%b", y);
       end
       else
       begin
         $fclose(file_in);
-        $fclose(file_out);
-        $finish;
+        $fclose(file_out);$finish;
       end
     end
   end

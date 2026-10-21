@@ -1,31 +1,49 @@
 `timescale 1ns/1ps
 
-module sc_neuron (input clk, rst_n, x1, x2, w1, w2, b, output reg y);
-  wire out1, out2;
-  wire[1:0] sel;
-  and a1(out1, x1, w1);
-  and a2(out2, x2, w2);
+module sc_neuron #(
+  parameter N = 2,      
+  parameter SEL_WIDTH = $clog2(N + 1)
+)(
+  input clk, 
+  input rst_n, 
+  input [N-1:0] x,
+  input [N-1:0] w,
+  input b,
+  output reg y
+);
 
-  rand_gen_2bit rng(clk, rst_n, sel);
+  wire [N-1:0] out_xw;
+  wire [SEL_WIDTH-1:0] sel;
+  
+  assign out_xw = x & w;
+
+  rand_gen #(
+    .SEL_WIDTH(SEL_WIDTH)
+  ) rng (
+    .clk(clk), 
+    .rst_n(rst_n), 
+    .rand_out(sel)
+  );
 
   always @(*)
   begin
-    case (sel)
-      2'b00:
-        y = out1;
-      2'b01:
-        y = out2;
-      2'b10:
-        y = b;
-      2'b11:
-        y = 1'b0;
-      default:
-        y = 1'b0;
-    endcase
+    if (sel < N)
+      y = out_xw[sel];
+    else if (sel == N)
+      y = b;
+    else
+      y = 1'b0;
   end
 endmodule
 
-module rand_gen_2bit (input clk, rst_n, output wire [1:0] rand_out);
+
+module rand_gen #(
+  parameter SEL_WIDTH = 2
+)(
+  input clk, 
+  input rst_n, 
+  output wire [SEL_WIDTH-1:0] rand_out
+);
 
   reg [15:0] state;
   wire [15:0] next_state;
@@ -48,6 +66,12 @@ module rand_gen_2bit (input clk, rst_n, output wire [1:0] rand_out);
       state <= next_state;
     end
   end
-  assign rand_out = {state[15], state[11]};
+
+  genvar i;
+  generate
+    for (i = 0; i < SEL_WIDTH; i = i + 1) begin : rng_taps
+      assign rand_out[i] = state[(i * 16) / SEL_WIDTH];
+    end
+  endgenerate
 
 endmodule

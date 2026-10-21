@@ -20,6 +20,6 @@ if __name__ == "__main__":
     b_prob = float(input("Enter probability for B: "))
     
     TOTAL_LINES = 2_000_000
-    OUTPUT_FILE = "input2.txt"
+    OUTPUT_FILE = "inputs.txt"
     
     generate_bitstream(x_probs, w_probs, b_prob, TOTAL_LINES, OUTPUT_FILE)
