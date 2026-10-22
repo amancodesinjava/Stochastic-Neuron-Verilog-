@@ -25,18 +25,18 @@ module tb_classical_neuron_32bit;
 
     initial begin
         num_inputs=4;
-        x[0]=encode(0.75);
-        x[1]=encode(0.50);
-        x[2]=encode(0.20);
-        x[3]=encode(0.90);
+      x[0]=encode(0.1);
+      x[1]=encode(0.2);
+      x[2]=encode(0.30);
+      x[3]=encode(0.40);
       x[4]=32'd0; x[5]=32'd0; x[6]=32'd0; x[7]=32'd0; x[8]=32'd0; x[9]=32'd0; x[10]=32'd0;x[11]=32'd0; x[12]=32'd0; x[13]=32'd0; x[14]=32'd0; x[15]=32'd0;
-        W[0]=encode(0.80);
+      W[0]=encode(0.50);
         W[1]=encode(0.60);
-        W[2]=encode(0.50);
-        W[3]=encode(0.40);
+      W[2]=encode(0.70);
+      W[3]=encode(0.80);
         W[4]=32'd0; W[5]=32'd0; W[6]=32'd0; W[7]=32'd0;
       W[8]=32'd0; W[9]=32'd0; W[10]=32'd0; W[11]=32'd0; W[12]=32'd0; W[13]=32'd0; W[14]=32'd0; W[15]=32'd0;
-        bias=encode(0.10);
+      bias=encode(0.90);
         #10;
         z_decimal=z_raw/4611686018427387904.0; // 2^62
         y_decimal=y/2147483648.0; // 2^31
