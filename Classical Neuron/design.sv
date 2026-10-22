@@ -11,6 +11,7 @@ module classical_neuron_32bit (
   	reg  [79:0] sum_products;
     wire [63:0] scaled_bias;
   	wire [79:0] scaled_z_div;
+  	reg[3:0] shift;
     integer i;
   
     assign p[0]=(0<num_inputs) ? (x[0]*W[0]) : 64'd0;
@@ -36,8 +37,17 @@ module classical_neuron_32bit (
         end
     end
     assign scaled_bias=({32'd0, bias}<<31);
-    assign z_raw=sum_products+{8'd0, scaled_bias};
-  	assign scaled_z_div=z_raw >> (31+num_inputs);
-    assign y=(scaled_z_div>72'd2147483648) ? 32'h80000000 : scaled_z_div[31:0];
+  	assign z_raw=sum_products+{16'd0, scaled_bias};
+  always @(*) begin
+    casex (num_inputs)
+      5'd0: shift=4'd1;
+      5'd1,5'd2: shift=4'd2;
+      5'd3,5'd4,5'd5,5'd6: shift=4'd3;
+      5'd7,5'd8,5'd9,5'd10,5'd11,5'd12,5'd13,5'd14: shift=4'd4;
+      default: shift=4'd5;
+    endcase
+  end
+  assign scaled_z_div=z_raw >> (31+shift);
+  assign y=(scaled_z_div>80'd2147483648) ? 32'h80000000 : scaled_z_div[31:0];
 
 endmodule
