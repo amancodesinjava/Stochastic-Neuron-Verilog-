@@ -33,7 +33,7 @@ integer file_in, file_out, scan_file;
     w = 0;
     b = 0;
 
-    file_in = $fopen("inputs.txt", "r");
+    file_in = $fopen("../bitstream/inputs.txt", "r");
     file_out = $fopen("output.txt", "w");
 
     #15;
