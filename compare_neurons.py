@@ -1,21 +1,3 @@
-#!/usr/bin/env python3
-"""
-Neuron Benchmarking & Comparison Script
-========================================
-Compares a 32-bit Classical Fixed-Point Neuron with a Stochastic Computing (SC) Neuron.
-
-NOTE ON IMPLEMENTATION:
-- Both neuron computations are strictly executed by their respective Verilog/SystemVerilog modules
-  using Icarus Verilog (iverilog) and vvp.
-- No algorithmic neuron logic (multiplications, additions, scaling, activation) is computed in Python.
-- Python serves only as the test harness to:
-    1. Parse CLI / interactive user inputs.
-    2. Feed input vectors to the Verilog simulations.
-    3. Measure compilation and simulation runtimes.
-    4. Collect the simulation outputs from the hardware models.
-    5. Evaluate and report accuracy and runtime trade-offs.
-"""
-
 import os
 import sys
 import time
@@ -28,7 +10,6 @@ from pathlib import Path
 
 
 def find_repo_root() -> Path:
-    """Locate the root of the Stochastic-Neuron-Verilog repository."""
     candidates = [
         Path(__file__).resolve().parent,
         Path(__file__).resolve().parent / "Stochastic-Neuron-Verilog-",
@@ -45,7 +26,6 @@ def find_repo_root() -> Path:
 
 
 def check_prerequisites():
-    """Verify that iverilog and vvp are installed and accessible."""
     for tool in ["iverilog", "vvp"]:
         if shutil.which(tool) is None:
             sys.exit(
@@ -55,7 +35,6 @@ def check_prerequisites():
 
 
 def parse_arguments():
-    """Parse command line arguments or prepare for interactive prompting."""
     parser = argparse.ArgumentParser(
         description="Benchmark and compare Classical Fixed-Point Neuron vs Stochastic Computing Neuron via Verilog simulation."
     )
@@ -79,12 +58,10 @@ def parse_arguments():
 
 
 def prompt_for_inputs():
-    """Interactive CLI prompts for inputs if flags were not provided."""
     print("=" * 65)
     print("      NEURON VERILOG SIMULATION COMPARISON (CLI MODE)")
     print("=" * 65)
     
-    # 1. Number of inputs N
     while True:
         try:
             n_str = input("\nEnter number of inputs (N) [e.g. 4]: ").strip()
@@ -96,7 +73,6 @@ def prompt_for_inputs():
         except ValueError:
             print("  [!] Invalid integer. Please try again.")
 
-    # 2. Vector X
     print(f"\nEnter probabilities for X (space-separated, {n} values in [0.0, 1.0]):")
     print("  Example: " + " ".join([f"{0.1 * (i+1):.2f}" for i in range(min(n, 6))]))
     while True:
@@ -114,7 +90,6 @@ def prompt_for_inputs():
         except ValueError:
             print("  [!] Invalid floating-point value. Try again.")
 
-    # 3. Vector W
     print(f"\nEnter probabilities for W (space-separated, {n} values in [0.0, 1.0]):")
     print("  Example: " + " ".join([f"{0.2 * ((i%4)+1):.2f}" for i in range(n)]))
     while True:
@@ -132,7 +107,6 @@ def prompt_for_inputs():
         except ValueError:
             print("  [!] Invalid floating-point value. Try again.")
 
-    # 4. Bias
     while True:
         try:
             bias_str = input("\nEnter probability for Bias (in [0.0, 1.0]) [e.g. 0.40]: ").strip()
@@ -144,7 +118,6 @@ def prompt_for_inputs():
         except ValueError:
             print("  [!] Invalid floating-point value. Try again.")
 
-    # 5. Cycles
     while True:
         try:
             cycles_str = input("\nEnter bitstream length / cycles [default: 100000]: ").strip()
@@ -163,24 +136,16 @@ def prompt_for_inputs():
 
 
 def run_classical_neuron(repo_dir: Path, n: int, x: list, w: list, bias: float):
-    """
-    Simulates the Classical 32-bit Fixed-Point Neuron in SystemVerilog.
-    Returns:
-        parsed_output: dict of outputs extracted from the Verilog simulation.
-        timing: dict of compilation and simulation times in seconds.
-    """
     classical_dir = repo_dir / "Classical Neuron"
     inputs_file = classical_dir / "classical_inputs.txt"
     sim_binary = classical_dir / "classical_sim"
 
-    # Step 1: Write inputs to file for the SystemVerilog testbench to read
     with open(inputs_file, "w") as f:
         f.write(f"{n}\n")
         f.write(" ".join(f"{val:.8f}" for val in x) + "\n")
         f.write(" ".join(f"{val:.8f}" for val in w) + "\n")
         f.write(f"{bias:.8f}\n")
 
-    # Step 2: Compile Classical Neuron with iverilog
     t_comp_start = time.perf_counter()
     compile_cmd = [
         "iverilog",
@@ -199,7 +164,6 @@ def run_classical_neuron(repo_dir: Path, n: int, x: list, w: list, bias: float):
     if comp_res.returncode != 0:
         raise RuntimeError(f"Classical Neuron compilation failed:\n{comp_res.stderr}")
 
-    # Step 3: Run simulation with vvp
     t_sim_start = time.perf_counter()
     sim_res = subprocess.run(
         ["vvp", str(sim_binary)],
@@ -212,7 +176,6 @@ def run_classical_neuron(repo_dir: Path, n: int, x: list, w: list, bias: float):
     if sim_res.returncode != 0:
         raise RuntimeError(f"Classical Neuron simulation failed:\n{sim_res.stderr}")
 
-    # Step 4: Extract output values directly from the Verilog stdout
     raw_z = None
     dec_z = None
     bin_y = None
@@ -247,19 +210,12 @@ def run_classical_neuron(repo_dir: Path, n: int, x: list, w: list, bias: float):
 
 
 def run_stochastic_neuron(repo_dir: Path, n: int, x: list, w: list, bias: float, cycles: int):
-    """
-    Simulates the Stochastic Computing Neuron in Verilog.
-    Returns:
-        parsed_output: dict of outputs from bitstream generation and Verilog simulation.
-        timing: dict of breakdown times in seconds.
-    """
     stochastic_dir = repo_dir / "Stochastic Neuron"
     bitstream_dir = repo_dir / "bitstream"
     inputs_file = bitstream_dir / "inputs.txt"
     sim_binary = stochastic_dir / "neuron_sim"
     output_file = stochastic_dir / "output.txt"
 
-    # Step 1: Generate Bernoulli bitstream for the stochastic simulation
     t_gen_start = time.perf_counter()
     batch_size = 50000
     remaining = cycles
@@ -277,7 +233,6 @@ def run_stochastic_neuron(repo_dir: Path, n: int, x: list, w: list, bias: float,
             remaining -= batch
     t_gen_end = time.perf_counter()
 
-    # Step 2: Compile Stochastic Neuron with iverilog and override N parameter
     t_comp_start = time.perf_counter()
     compile_cmd = [
         "iverilog",
@@ -294,7 +249,6 @@ def run_stochastic_neuron(repo_dir: Path, n: int, x: list, w: list, bias: float,
     if comp_res.returncode != 0:
         raise RuntimeError(f"Stochastic Neuron compilation failed:\n{comp_res.stderr}")
 
-    # Step 3: Run simulation with vvp (processes bitstream and writes output.txt)
     t_sim_start = time.perf_counter()
     sim_res = subprocess.run(
         ["vvp", str(sim_binary)],
@@ -307,7 +261,6 @@ def run_stochastic_neuron(repo_dir: Path, n: int, x: list, w: list, bias: float,
     if sim_res.returncode != 0:
         raise RuntimeError(f"Stochastic Neuron simulation failed:\n{sim_res.stderr}")
 
-    # Step 4: Parse output bitstream from output.txt
     t_parse_start = time.perf_counter()
     with open(output_file, "r") as f:
         stream = f.read()
@@ -376,24 +329,14 @@ def main():
     print(f" Stochastic Bitstream Length : {cycles:,} cycles")
     print("=" * 65)
 
-    # -------------------------------------------------------------
-    # 1. Run Classical Neuron (Verilog)
-    # -------------------------------------------------------------
     print("\n[*] Simulating Classical Fixed-Point Neuron (SystemVerilog)...")
     res_classical, time_classical = run_classical_neuron(repo_dir, n, x_probs, w_probs, bias)
     print(f"    ✓ Classical simulation complete in {time_classical['total_time']:.4f}s")
 
-    # -------------------------------------------------------------
-    # 2. Run Stochastic Neuron (Verilog)
-    # -------------------------------------------------------------
     print("\n[*] Simulating Stochastic Computing Neuron (Verilog)...")
     res_stochastic, time_stochastic = run_stochastic_neuron(repo_dir, n, x_probs, w_probs, bias, cycles)
     print(f"    ✓ Stochastic simulation complete in {time_stochastic['total_time']:.4f}s")
 
-    # -------------------------------------------------------------
-    # 3. Ground Truth Mathematical Reference (for error analysis)
-    # -------------------------------------------------------------
-    # In both architectures, the MUX / normalizer scales by 2^(ceil(log2(N + 1)))
     shift_bits = math.ceil(math.log2(n + 1))
     scale_factor = 2 ** shift_bits
 
@@ -403,7 +346,6 @@ def main():
     y_classical = res_classical["decimal_y"]
     y_stochastic = res_stochastic["probability"]
 
-    # Error Calculations
     err_classical_vs_ideal = abs(y_classical - ideal_y)
     err_stochastic_vs_ideal = abs(y_stochastic - ideal_y)
     diff_stochastic_vs_classical = abs(y_stochastic - y_classical)
@@ -411,9 +353,6 @@ def main():
     acc_classical_pct = max(0.0, (1.0 - (err_classical_vs_ideal / ideal_y)) * 100.0) if ideal_y > 0 else 100.0
     acc_stochastic_pct = max(0.0, (1.0 - (err_stochastic_vs_ideal / ideal_y)) * 100.0) if ideal_y > 0 else 100.0
 
-    # -------------------------------------------------------------
-    # 4. Display Results and Accuracy Comparison
-    # -------------------------------------------------------------
     print("\n" + "=" * 65)
     print("                   OUTPUT & ACCURACY COMPARISON")
     print("=" * 65)
@@ -430,9 +369,6 @@ def main():
         print(f"   • Relative Discrepancy (SC vs Fixed) : {rel_diff_pct:.4f}%")
     print("=" * 65)
 
-    # -------------------------------------------------------------
-    # 5. Display Runtime Performance Comparison
-    # -------------------------------------------------------------
     print("\n" + "=" * 65)
     print("                   RUNTIME PERFORMANCE COMPARISON")
     print("=" * 65)
@@ -446,38 +382,12 @@ def main():
     print(f" {'Total Execution Time':<30} | {time_classical['total_time']:<15.4f}s | {time_stochastic['total_time']:<15.4f}s")
     print("=" * 65)
 
-    # Speedup / Ratio
     sim_ratio = (time_stochastic['sim_time'] / time_classical['sim_time']) if time_classical['sim_time'] > 0 else 0
     total_ratio = (time_stochastic['total_time'] / time_classical['total_time']) if time_classical['total_time'] > 0 else 0
 
     print(f"\n [Speedup Summary]")
     print(f"   • Simulation Speedup (Classical vs SC): {sim_ratio:.1f}x faster in simulation")
-    print(f"   • Total End-to-End Speedup            : {total_ratio:.1f}x faster in overall execution")
-
-    # -------------------------------------------------------------
-    # 6. Architectural Trade-Off Insights
-    # -------------------------------------------------------------
-    print("\n" + "=" * 65)
-    print("                  ARCHITECTURAL TRADE-OFF ANALYSIS")
-    print("=" * 65)
-    print("""
- 1. Silicon Area / Hardware Complexity:
-    - Classical Neuron: Requires N 32x32 DSP multipliers and wide 65-72 bit
-      accumulators, taking substantial silicon area and dynamic power.
-    - Stochastic Neuron: Requires only N 1-bit AND gates and a 1-bit MUX +
-      16-bit LFSR, offering massive (>90%) silicon area savings.
-
- 2. Latency / Throughput:
-    - Classical Neuron: Combinational single-cycle latency (1 clock cycle).
-    - Stochastic Neuron: Requires long bitstreams ({cycles:,} cycles) to
-      diminish statistical variance (sigma = sqrt(p(1-p)/K)).
-
- 3. Fault Tolerance:
-    - Classical Neuron: A single bit-flip in the MSB can alter output by 50%.
-    - Stochastic Neuron: Inherently fault-tolerant; single bit errors cause
-      only a negligible 1/K shift in output probability.
-""".format(cycles=cycles))
-    print("=" * 65 + "\n")
+    print(f"   • Total End-to-End Speedup            : {total_ratio:.1f}x faster in overall execution\n")
 
 
 if __name__ == "__main__":
