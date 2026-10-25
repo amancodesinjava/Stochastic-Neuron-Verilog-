@@ -1,5 +1,5 @@
 module tb_classical_neuron_32bit;
-    parameter N = 100;
+    parameter N=100;
   	reg [$clog2(N+1)-1:0]  num_inputs;
   	reg [31:0] x [0:N-1];
   	reg [31:0] W [0:N-1];
