@@ -34,6 +34,9 @@ integer file_in, file_out, scan_file;
     b = 0;
 
     file_in = $fopen("../bitstream/inputs.txt", "r");
+    if (file_in == 0) begin
+      file_in = $fopen("inputs.txt", "r");
+    end
     file_out = $fopen("output.txt", "w");
 
     #15;

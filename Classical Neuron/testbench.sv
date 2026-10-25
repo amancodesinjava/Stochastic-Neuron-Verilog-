@@ -9,6 +9,9 @@ module tb_classical_neuron_32bit;
     real z_decimal;
     real y_decimal;
     integer k;
+    integer file_in;
+    integer scan_file;
+    real temp_r;
 
     classical_neuron_32bit #(.N(N)) dut (
         .num_inputs(num_inputs),
@@ -27,26 +30,44 @@ module tb_classical_neuron_32bit;
     endfunction
 
     initial begin
-        num_inputs=6;
+        file_in = $fopen("classical_inputs.txt", "r");
+        if (file_in != 0) begin
+            scan_file = $fscanf(file_in, "%d", num_inputs);
+            for (k = 0; k < num_inputs; k = k + 1) begin
+                scan_file = $fscanf(file_in, "%f", temp_r);
+                x[k] = encode(temp_r);
+            end
+            for (k = num_inputs; k < N; k = k + 1) x[k] = 32'd0;
+            for (k = 0; k < num_inputs; k = k + 1) begin
+                scan_file = $fscanf(file_in, "%f", temp_r);
+                W[k] = encode(temp_r);
+            end
+            for (k = num_inputs; k < N; k = k + 1) W[k] = 32'd0;
+            scan_file = $fscanf(file_in, "%f", temp_r);
+            bias = encode(temp_r);
+            $fclose(file_in);
+        end else begin
+            num_inputs=6;
 
-      x[0]=encode(0.1);
-      x[1]=encode(0.2);
-      x[2]=encode(0.30);
-      x[3]=encode(0.40);
-      x[4]=encode(0.50);
-      x[5]=encode(0.60);
-      for (k=num_inputs; k<N; k=k+1) x[k]=32'd0;
+            x[0]=encode(0.1);
+            x[1]=encode(0.2);
+            x[2]=encode(0.30);
+            x[3]=encode(0.40);
+            x[4]=encode(0.50);
+            x[5]=encode(0.60);
+            for (k=num_inputs; k<N; k=k+1) x[k]=32'd0;
 
-      W[0]=encode(0.50);
-        W[1]=encode(0.60);
-      W[2]=encode(0.70);
-      W[3]=encode(0.80);
-      W[4]=encode(0.90);
-      W[5]=encode(0.90);
-      for (k=num_inputs; k<N; k=k+1) W[k]=32'd0;
+            W[0]=encode(0.50);
+            W[1]=encode(0.60);
+            W[2]=encode(0.70);
+            W[3]=encode(0.80);
+            W[4]=encode(0.90);
+            W[5]=encode(0.90);
+            for (k=num_inputs; k<N; k=k+1) W[k]=32'd0;
 
-      bias=encode(0.90);
-
+            bias=encode(0.90);
+        end
+        
         #10;
         z_decimal=z_raw/4611686018427387904.0; // 2^62
         y_decimal=y/2147483648.0; // 2^31
