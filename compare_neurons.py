@@ -35,104 +35,13 @@ def check_prerequisites():
 
 
 def parse_arguments():
-    parser = argparse.ArgumentParser(
-        description="Benchmark and compare Classical Fixed-Point Neuron vs Stochastic Computing Neuron via Verilog simulation."
-    )
-    parser.add_argument(
-        "-n", "--n", type=int, help="Number of neuron inputs (e.g., 4)"
-    )
-    parser.add_argument(
-        "-x", "--x", type=float, nargs="+", help="Input vector probabilities/values in range [0.0, 1.0]"
-    )
-    parser.add_argument(
-        "-w", "--w", type=float, nargs="+", help="Weight vector probabilities/values in range [0.0, 1.0]"
-    )
-    parser.add_argument(
-        "-b", "--bias", type=float, help="Bias probability/value in range [0.0, 1.0]"
-    )
-    parser.add_argument(
-        "-c", "--cycles", type=int, default=100000,
-        help="Number of stochastic simulation cycles / bitstream length (default: 100,000)"
-    )
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-n", type=int, required=True)
+    parser.add_argument("-x", type=float, nargs="+", required=True)
+    parser.add_argument("-w", type=float, nargs="+", required=True)
+    parser.add_argument("-b", type=float, required=True)
+    parser.add_argument("--cycles", type=int, required=True)
     return parser.parse_args()
-
-
-def prompt_for_inputs():
-    print("=" * 65)
-    print("      NEURON VERILOG SIMULATION COMPARISON (CLI MODE)")
-    print("=" * 65)
-    
-    while True:
-        try:
-            n_str = input("\nEnter number of inputs (N) [e.g. 4]: ").strip()
-            n = int(n_str)
-            if n <= 0:
-                print("  [!] N must be a positive integer.")
-                continue
-            break
-        except ValueError:
-            print("  [!] Invalid integer. Please try again.")
-
-    print(f"\nEnter probabilities for X (space-separated, {n} values in [0.0, 1.0]):")
-    print("  Example: " + " ".join([f"{0.1 * (i+1):.2f}" for i in range(min(n, 6))]))
-    while True:
-        try:
-            line = input(f"X (1 to {n}): ").strip()
-            parts = [float(val) for val in line.split()]
-            if len(parts) != n:
-                print(f"  [!] Expected {n} values, got {len(parts)}. Try again.")
-                continue
-            if any(val < 0.0 or val > 1.0 for val in parts):
-                print("  [!] All probabilities must be between 0.0 and 1.0. Try again.")
-                continue
-            x_probs = parts
-            break
-        except ValueError:
-            print("  [!] Invalid floating-point value. Try again.")
-
-    print(f"\nEnter probabilities for W (space-separated, {n} values in [0.0, 1.0]):")
-    print("  Example: " + " ".join([f"{0.2 * ((i%4)+1):.2f}" for i in range(n)]))
-    while True:
-        try:
-            line = input(f"W (1 to {n}): ").strip()
-            parts = [float(val) for val in line.split()]
-            if len(parts) != n:
-                print(f"  [!] Expected {n} values, got {len(parts)}. Try again.")
-                continue
-            if any(val < 0.0 or val > 1.0 for val in parts):
-                print("  [!] All probabilities must be between 0.0 and 1.0. Try again.")
-                continue
-            w_probs = parts
-            break
-        except ValueError:
-            print("  [!] Invalid floating-point value. Try again.")
-
-    while True:
-        try:
-            bias_str = input("\nEnter probability for Bias (in [0.0, 1.0]) [e.g. 0.40]: ").strip()
-            bias = float(bias_str)
-            if bias < 0.0 or bias > 1.0:
-                print("  [!] Bias must be between 0.0 and 1.0. Try again.")
-                continue
-            break
-        except ValueError:
-            print("  [!] Invalid floating-point value. Try again.")
-
-    while True:
-        try:
-            cycles_str = input("\nEnter bitstream length / cycles [default: 100000]: ").strip()
-            if not cycles_str:
-                cycles = 100000
-            else:
-                cycles = int(cycles_str)
-                if cycles <= 0:
-                    print("  [!] Cycles must be greater than 0.")
-                    continue
-            break
-        except ValueError:
-            print("  [!] Invalid integer. Try again.")
-
-    return n, x_probs, w_probs, bias, cycles
 
 
 def run_classical_neuron(repo_dir: Path, n: int, x: list, w: list, bias: float):
@@ -300,24 +209,20 @@ def main():
 
     args = parse_arguments()
 
-    if (
-        args.n is not None
-        and args.x is not None
-        and args.w is not None
-        and args.bias is not None
-    ):
-        n = args.n
-        x_probs = args.x
-        w_probs = args.w
-        bias = args.bias
-        cycles = args.cycles
+    n = args.n
+    x_probs = args.x
+    w_probs = args.w
+    bias = args.b
+    cycles = args.cycles
 
-        if len(x_probs) != n or len(w_probs) != n:
-            sys.exit(f"[ERROR] Expected {n} values for -x and -w, got {len(x_probs)} and {len(w_probs)}.")
-        if any(p < 0.0 or p > 1.0 for p in x_probs + w_probs + [bias]):
-            sys.exit("[ERROR] All probabilities must be between 0.0 and 1.0.")
-    else:
-        n, x_probs, w_probs, bias, cycles = prompt_for_inputs()
+    if n <= 0:
+        sys.exit("[ERROR] -n must be a positive integer.")
+    if cycles <= 0:
+        sys.exit("[ERROR] --cycles must be a positive integer.")
+    if len(x_probs) != n or len(w_probs) != n:
+        sys.exit(f"[ERROR] Expected {n} values for -x and -w, got {len(x_probs)} and {len(w_probs)}.")
+    if any(p < 0.0 or p > 1.0 for p in x_probs + w_probs + [bias]):
+        sys.exit("[ERROR] All probabilities for -x, -w, and -b must be between 0.0 and 1.0.")
 
     print("\n" + "=" * 65)
     print("                 BENCHMARK CONFIGURATION")
