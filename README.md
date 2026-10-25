@@ -3,12 +3,6 @@
 To compare both the Classical Fixed-Point Neuron and the Stochastic Neuron on arbitrary inputs, run:
 
 ```bash
-python3 compare_neurons.py
-```
-
-Or pass inputs directly via CLI arguments:
-
-```bash
 python3 compare_neurons.py -n 4 -x 0.1 0.1 0.1 0.1 -w 0.2 0.2 0.2 0.2 -b 0.4 --cycles 100000 > answer.txt
 ```
 
