@@ -1,5 +1,5 @@
 module tb_classical_neuron_32bit;
-    parameter N = 100;
+    parameter N=100;
   	reg [$clog2(N+1)-1:0]  num_inputs;
   	reg [31:0] x [0:N-1];
   	reg [31:0] W [0:N-1];
@@ -46,7 +46,6 @@ module tb_classical_neuron_32bit;
       for (k=num_inputs; k<N; k=k+1) W[k]=32'd0;
 
       bias=encode(0.90);
-
         #10;
         z_decimal=z_raw/4611686018427387904.0; // 2^62
         y_decimal=y/2147483648.0; // 2^31
